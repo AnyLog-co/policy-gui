@@ -1,25 +1,26 @@
 import logo from './logo.svg';
 import './App.css';
 
+
+import NodeInputForm from './components/NodeInputForm'; // adjust path if it's in a subfolder
+
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div style={styles.appContainer}>
+      <h1>AnyLog Policy Maker</h1>
+      <NodeInputForm />
     </div>
   );
 }
+
+const styles = {
+  appContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    paddingTop: '40px',
+    fontFamily: 'Arial, sans-serif',
+  },
+};
 
 export default App;

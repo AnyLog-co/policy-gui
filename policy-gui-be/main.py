@@ -1,24 +1,24 @@
-# # app/routers/users.py
-# from fastapi import APIRouter
+# main.py
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-# router = APIRouter(
-#     prefix="/users",
-#     tags=["users"],
-#     responses={404: {"description": "User not found"}},
-# )
+app = FastAPI()
 
-# @router.get("/")
-# async def read_users():
-#     return [{"username": "Alice"}, {"username": "Bob"}]
+# Allow CORS for React frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # React dev server
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# @router.get("/{user_id}")
-# async def read_user(user_id: int):
-#     return {"username": f"User {user_id}"}
 
-# # main.py
-# from fastapi import FastAPI
-# from app.routers import users
+@app.get("/")
+def root():
+    return {"message": "Welcome to the Policy GUI Backend!"}
 
-# app = FastAPI()
 
-# app.include_router(users.router)
+@app.get("/ping")
+def ping():
+    return {"message": "pong"}
