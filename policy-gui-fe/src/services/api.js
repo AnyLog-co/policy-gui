@@ -11,3 +11,25 @@ export async function pingBackend() {
     return null;
   }
 }
+
+export async function submitPolicy(nodeAddress, type, policyData) {
+  try {
+    console.log("Submitting policy:", {
+      node: nodeAddress,
+      type,
+      policyData
+    });
+    const response = await fetch(`${API_BASE_URL}/submit/${type}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        node: nodeAddress,
+        policy: policyData
+      }),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("API Error:", error);
+    return { error: "Failed to submit policy" };
+  }
+}
