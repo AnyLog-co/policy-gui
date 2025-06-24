@@ -15,3 +15,12 @@
 9. backend processes policy form data
 10. backend returns success/failure response
 11. fe displays success/failure message to user
+
+
+
+
+### How to add new policy type
+1. make new template in be/templates folder
+2. make new model file in be/models folder
+3. edit SubmitPolicyRequest and policy_factory in be/main.py to include new policy type
+4. edit PolicySelector.js in fe/src/components to include new policy type
