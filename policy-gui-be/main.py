@@ -7,6 +7,7 @@ from models.user_policy import UserPolicyData, UserPolicy
 from models.base_policy import BasePolicy
 import json
 import os
+import helpers
 
 app = FastAPI()
 
@@ -32,7 +33,8 @@ class SubmitPolicyRequest(BaseModel):
 
 @app.get("/")
 def root():
-    return {"message": "Welcome to the Policy GUI Backend!"}
+    resp = helpers.make_request("45.33.110.211:32549", "GET", "get status")
+    return {"message": resp}
 
 
 @app.get("/policy-template/{policy_type}")
@@ -65,8 +67,9 @@ def submit_policy(request: SubmitPolicyRequest):
 
     print("Final JSON Policy:", final_json)
 
+    resp = helpers.make_policy(request.node, final_json)
 
-    # Here you would typically save the policy to a database or file system
+    return resp
 
     return {
         "message": f"{request.policy_type} policy created successfully",
