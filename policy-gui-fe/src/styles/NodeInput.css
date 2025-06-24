@@ -1,0 +1,15 @@
+.node-input {
+  margin-bottom: 20px;
+}
+
+.node-input label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.node-input input {
+  width: 100%;
+  padding: 8px;
+  font-size: 14px;
+}

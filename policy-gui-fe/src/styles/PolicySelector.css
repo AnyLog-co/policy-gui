@@ -1,0 +1,15 @@
+.policy-selector {
+  margin-bottom: 20px;
+}
+
+.policy-selector label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.policy-selector select {
+  width: 100%;
+  padding: 8px;
+  font-size: 14px;
+}

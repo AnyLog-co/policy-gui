@@ -1,8 +1,9 @@
 import React from 'react';
+import '../styles/NodeInput.css';
 
 function NodeInput({ value, onChange }) {
   return (
-    <div>
+    <div className="node-input">
       <label>Node Address (IP:Port):</label>
       <input
         type="text"
