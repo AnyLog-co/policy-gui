@@ -56,12 +56,19 @@ function DynamicPolicyForm({ template, formData, onChange }) {
     }
   }
 
+  // Helper to capitalize first letter
+  function capitalizeFirstLetter(str) {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
   return (
     <div className="dynamic-policy-form">
-      <h4>{template.policy_type} Policy Form</h4>
+      <h4>{capitalizeFirstLetter(template.policy_type)} Policy Form</h4>
       {template.fields.map((field) => {
         if (field.type === 'generated') return null;
 
+        
         return (
           <div key={field.name} className="dynamic-policy-form-field">
             <label className="dynamic-policy-form-label">
