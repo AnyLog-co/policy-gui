@@ -42,6 +42,23 @@ export async function getPolicyTemplate(policyType) {
   }
 }
 
+export async function fetchPolicyTypes() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/policy-types`);
+    const data = await response.json();
+
+    if (response.ok && data.types) {
+      return data.types; // expected to be an array of { type, name }
+    } else {
+      console.error("Invalid policy types response:", data);
+      return [];
+    }
+  } catch (error) {
+    console.error("Error fetching policy types:", error);
+    return [];
+  }
+}
+
 export async function pingBackend() {
   try {
     const response = await fetch(`${API_BASE_URL}/ping`);

@@ -1,4 +1,5 @@
 {
+  "name": "User Policy",
   "policy_type": "user",
   "fields": [
     {

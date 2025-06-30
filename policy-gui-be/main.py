@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from typing import Literal, Union, Dict
 from models.user_policy import UserPolicyData, UserPolicy
 from models.base_policy import BasePolicy
+from models.generic_policy import GenericPolicy
 import json
 import os
 import helpers
@@ -26,9 +27,8 @@ TEMPLATE_DIR = "templates"
 # --- Unified Request Model --- #
 class SubmitPolicyRequest(BaseModel):
     node: str
-    policy_type: Literal["user", "config", "security"]  # Expand this as more types are added
-    policy: Dict  # raw policy body (we will parse it later)
-
+    policy_type: str  # Allow dynamic addition
+    policy: Dict
 
 
 @app.get("/")
@@ -36,6 +36,23 @@ def root():
     resp = helpers.make_request("45.33.110.211:32549", "GET", "get status")
     return {"message": resp}
 
+@app.get("/policy-types")
+def list_policy_types():
+    policy_list = []
+
+    for filename in os.listdir(TEMPLATE_DIR):
+        if filename.endswith("_policy.json"):
+            try:
+                with open(os.path.join(TEMPLATE_DIR, filename), "r") as f:
+                    template = json.load(f)
+                    policy_list.append({
+                        "type": template.get("policy_type"),
+                        "name": template.get("name", template.get("policy_type"))
+                    })
+            except Exception as e:
+                continue  # skip broken files
+
+    return {"types": policy_list}
 
 @app.get("/policy-template/{policy_type}")
 def get_policy_template(policy_type: str):
@@ -49,11 +66,17 @@ def get_policy_template(policy_type: str):
 
 # --- Dispatcher --- #
 def policy_factory(policy_type: str, policy_data: Dict) -> BasePolicy:
-    if policy_type == "user":
-        data = UserPolicyData(**policy_data)
-        return UserPolicy(data)
-    raise HTTPException(status_code=400, detail="Unsupported policy type")
+    template_path = os.path.join(TEMPLATE_DIR, f"{policy_type}_policy.json")
+    if not os.path.exists(template_path):
+        raise HTTPException(status_code=404, detail="Template not found")
 
+    with open(template_path, "r") as f:
+        template = json.load(f)
+
+    try:
+        return GenericPolicy(template, policy_data)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
 
 
 @app.post("/submit")
@@ -71,8 +94,8 @@ def submit_policy(request: SubmitPolicyRequest):
 
     return resp
 
-    return {
-        "message": f"{request.policy_type} policy created successfully",
-        "policy": final_json,
-        "target_node": request.node
-    }
+    # return {
+    #     "message": f"{request.policy_type} policy created successfully",
+    #     "policy": final_json,
+    #     "target_node": request.node
+    # }

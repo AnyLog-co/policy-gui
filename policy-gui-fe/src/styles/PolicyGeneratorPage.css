@@ -95,6 +95,27 @@
   line-height: 1.6;
   max-height: 400px;
   overflow-y: auto;
+  text-align: left;
+}
+
+.policy-generator .response h4 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.policy-generator .response pre {
+  margin: 0;
+  font-family: 'Fira Code', 'Monaco', 'Consolas', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #374151;
+  background: #ffffff;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  overflow-x: auto;
 }
 
 .policy-generator .loading {
