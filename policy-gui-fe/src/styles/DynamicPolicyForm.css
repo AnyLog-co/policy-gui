@@ -144,3 +144,22 @@
   margin-top: 4px;
   font-family: 'Inter', sans-serif;
 }
+
+.required-asterisk {
+  color: red;
+  margin-left: 4px;
+  font-weight: bold;
+}
+
+.array-input {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.array-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+

@@ -1,0 +1,30 @@
+{
+  "name": "Security Policy",
+  "policy_file": "security_policy",
+  "policy_type": "security",
+  "fields": [
+    {
+      "name": "tag",
+      "type": "text",
+      "required": true,
+      "description": "A unique identifier for the security policy, used to reference it in the system."
+    },
+    {
+      "name": "extra tag",
+      "type": "text",
+      "required": false,
+      "description": "A unique identifier for the security policy, used to reference it in the system."
+    },
+    {
+      "name": "user mode",
+      "type": "select",
+      "label": "User Type",
+      "options": ["admin", "user"],
+      "description": "Choose access level",
+      "modifiers": {
+        "admin": { "permissions": ["read", "write", "config"] },
+        "user": { "permissions": ["read"] }
+      }
+    }
+  ]
+}

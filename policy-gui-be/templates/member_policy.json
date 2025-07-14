@@ -1,0 +1,31 @@
+{
+  "name": "Member Policy",
+  "policy_file": "member_policy",
+  "policy_type": "member",
+  "post_process": "apply_signature",  
+    "fields": [
+      {
+        "name": "type",
+        "type": "select",
+        "label": "Type",
+        "options": ["root", "node", "user"],
+        "description": "Select the type of node or user",
+        "required": true
+      },
+      {
+        "name": "role",
+        "type": "select",
+        "label": "Role",
+        "options": ["admin", "operator", "query"],
+        "description": "Select the role for permissions",
+        "required": true
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "label": "Name",
+        "description": "Enter the name for this policy or user",
+        "required": true
+      }
+    ]
+}

@@ -1,0 +1,77 @@
+{
+  "name": "Permissions Policy",
+  "policy_file": "permissions_policy",
+  "policy_type": "permissions",
+  "post_process": "apply_signature",
+  "fields": [
+    {
+      "name": "name",
+      "type": "select",
+      "label": "Permission Name",
+      "options": ["securitytest_admin", "config_operator"],
+      "description": "Select the permission role",
+      "required": true
+    },
+    {
+      "name": "enable",
+      "type": "array",
+      "description": "Allowed commands",
+      "required": true
+    },
+    {
+      "name": "databases",
+      "type": "array",
+      "description": "Allowed databases",
+      "required": true
+    },
+    {
+      "name": "field_permissions",
+      "type": "object",
+      "label": "Field Permissions",
+      "fields": [
+        {
+          "name": "config",
+          "type": "object",
+          "fields": [
+            {
+              "name": "name",
+              "type": "boolean",
+              "label": "Name",
+              "default": true
+            },
+            {
+              "name": "port",
+              "type": "boolean",
+              "label": "Port",
+              "default": true
+            },
+            {
+              "name": "script",
+              "type": "boolean",
+              "label": "Script",
+              "default": false
+            }
+          ]
+        },
+        {
+          "name": "security",
+          "type": "object",
+          "fields": [
+            {
+              "name": "tag",
+              "type": "boolean",
+              "label": "Tag",
+              "default": true
+            },
+            {
+              "name": "extra tag",
+              "type": "boolean",
+              "label": "Extra Tag",
+              "default": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

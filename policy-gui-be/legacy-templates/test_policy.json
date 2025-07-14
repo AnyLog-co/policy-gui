@@ -1,0 +1,57 @@
+{
+  "name": "Test Policy",
+  "policy_file": "test_policy",
+  "policy_type": "test",
+  "fields": [
+    {
+      "name": "target node",
+      "type": "node",
+      "description": "Select a connected node to send the policy to."
+    },
+    {
+      "name": "source table",
+      "type": "table",
+      "description": "Choose a table to operate on."
+    },
+    {
+      "name": "script",
+      "type": "array",
+      "description": "Startup script lines",
+      "required": false
+    },
+
+    {
+      "name": "enable script",
+      "type": "boolean",
+      "label": "Enable Script",
+      "description": "Turn on to include default startup script",
+      "modifiers": {
+        "true": {
+          "script": [
+            "set authentication off",
+            "set echo queue on",
+            "set anylog home D:/Node"
+          ]
+        },
+        "false": {}
+      }
+    },
+    {
+      "name": "user mode",
+      "type": "select",
+      "label": "User Type",
+      "options": ["admin", "user"],
+      "description": "Choose access level",
+      "modifiers": {
+        "admin": { "permissions": ["read", "write", "config"] },
+        "user": { "permissions": ["read"] }
+      }
+    },
+    {
+      "name": "private key",
+      "type": "generated",
+      "source": "private_key",
+      "description": "Select a private key for secure operations."
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 {
   "name": "User Policy",
+  "policy_file": "user_policy",
   "policy_type": "user",
   "fields": [
     {

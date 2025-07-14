@@ -1,0 +1,20 @@
+{
+  "name": "Security Test Policy",
+  "policy_file": "securitytest_policy",
+  "policy_type": "securitytest",
+  "post_process": "apply_signature", 
+  "fields": [
+    {
+      "name": "tag",
+      "type": "text",
+      "required": true,
+      "description": "A unique identifier for the security test policy, used to reference it in the system."
+    },
+    {
+      "name": "private key",
+      "type": "generated",
+      "source": "private_key",
+      "description": "Select a private key for secure operations."
+    }
+  ]
+}

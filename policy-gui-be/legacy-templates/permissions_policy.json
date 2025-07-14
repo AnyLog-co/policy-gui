@@ -1,0 +1,62 @@
+{
+  "name": "Node Permissions Policy",
+  "policy_file": "permissions_policy",
+  "policy_type": "permissions",
+  "post_process": "apply_signature",
+  "fields": [
+    {
+      "name": "Node type",
+      "type": "select",
+      "label": "Node Type",
+      "options": ["master", "operator"],
+      "description": "Choose node type to define permissions",
+      "modifiers": {
+        "master": {
+          "roles": ["admin"],
+          "allowed_policy_types": [
+            "config",
+            "security",
+            "user",
+            "distribution"
+          ],
+          "field_permissions": {
+            "*": true
+          },
+          "action_permissions": {
+            "*": ["create", "read", "update", "delete"]
+          },
+          "resource_scopes": {
+            "tables": ["*"],
+            "clusters": ["*"]
+          }
+        },
+        "operator": {
+          "roles": ["operator"],
+          "allowed_policy_types": ["user", "config"],
+          "field_permissions": {
+            "user": {
+              "owner": false,
+              "company": false,
+              "type": true,
+              "public_key": false,
+              "expiration": true
+            },
+            "config": {
+              "name": true,
+              "port": true,
+              "script": true
+            }
+          },
+          "action_permissions": {
+            "user": ["create", "read", "update"],
+            "config": ["read"]
+          },
+          "resource_scopes": {
+            "tables": ["orders", "inventory"],
+            "clusters": ["clusterA"]
+          }
+        }
+      }
+    }
+  ]
+}

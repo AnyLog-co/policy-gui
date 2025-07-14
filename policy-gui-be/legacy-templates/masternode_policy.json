@@ -1,0 +1,30 @@
+{
+  "policy_file": "masternode_policy",
+  "policy_type": "master",
+  "name": "Master Node Policy",
+  "fields": [
+    { "name": "name", "type": "text", "required": true },
+    { "name": "company", "type": "text", "required": true },
+    { "name": "ip", "type": "text", "required": true },
+    { "name": "port", "type": "integer", "required": true },
+    { "name": "cluster", "type": "text", "required": false },
+    {
+      "name": "loc",
+      "type": "generated",
+      "source": "ipinfo.loc",
+      "description": "Automatically determined by IP"
+    },
+    {
+      "name": "country",
+      "type": "generated",
+      "source": "ipinfo.country",
+      "description": "Automatically determined by IP"
+    },
+    {
+      "name": "city",
+      "type": "generated",
+      "source": "ipinfo.city",
+      "description": "Automatically determined by IP"
+    }
+  ]
+}

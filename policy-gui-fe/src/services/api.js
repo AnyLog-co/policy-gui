@@ -13,7 +13,7 @@ export async function submitPolicy(nodeAddress, policyType, formData) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         node: nodeAddress,
-        policy_type: policyType,
+        policy_file: policyType,
         policy: formData
       }),
     });
@@ -59,6 +59,29 @@ export async function fetchPolicyTypes() {
   }
 }
 
+export async function fetchNodeOptions(nodeAddress) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/node-options/${nodeAddress}`);
+    const data = await res.json();
+    return data.options || [];
+  } catch (error) {
+    console.error("Error fetching node options:", error);
+    return [];
+  }
+}
+
+export async function fetchTableOptions(nodeAddress) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/table-options/${nodeAddress}`);
+    const data = await res.json();
+    return data.options || [];
+  } catch (error) {
+    console.error("Error fetching table options:", error);
+    return [];
+  }
+}
+
+
 export async function pingBackend() {
   try {
     const response = await fetch(`${API_BASE_URL}/ping`);
@@ -70,24 +93,8 @@ export async function pingBackend() {
   }
 }
 
-// export async function submitPolicy(nodeAddress, type, policyData) {
-//   try {
-//     console.log("Submitting policy:", {
-//       node: nodeAddress,
-//       type,
-//       policyData
-//     });
-//     const response = await fetch(`${API_BASE_URL}/submit/${type}`, {
-//       method: 'POST',
-//       headers: { 'Content-Type': 'application/json' },
-//       body: JSON.stringify({
-//         node: nodeAddress,
-//         policy: policyData
-//       }),
-//     });
-//     return await response.json();
-//   } catch (error) {
-//     console.error("API Error:", error);
-//     return { error: "Failed to submit policy" };
-//   }
-// }
+export async function fetchPermissions(nodeAddress) {
+  const res = await fetch(`${API_BASE_URL}/permissions/${nodeAddress}`);
+  console.log("Permissions response:", res);
+  return res.ok ? await res.json() : { roles: [], allowed_policy_types: [] };
+}
