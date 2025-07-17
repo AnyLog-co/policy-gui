@@ -1,0 +1,28 @@
+{
+  "name": "Security Group Policy",
+  "policy_file": "securitygroup_policy",
+  "policy_type": "security_group",
+  "fields": [
+    {
+      "name": "group_name",
+      "type": "text",
+      "label": "Security Group Name",
+      "description": "Select the Security Group to define permissions for",
+      "required": true
+    },
+    {
+      "name": "permissions",
+      "type": "array",
+      "label": "Associated Permissions",
+      "description": "List of permission names associated with this role",
+      "required": true
+    },
+    {
+      "name": "description",
+      "type": "text",
+      "label": "Role Description",
+      "description": "Description of what this role can do",
+      "required": false
+    }
+  ]
+} 

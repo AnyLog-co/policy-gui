@@ -156,7 +156,7 @@ def make_request(conn, method, command, topic=None, destination=None, payload=No
             response = anylog_conn.post(command=command, topic=topic, destination=destination, payload=payload)
         else:
             raise ValueError("Invalid method. Use 'GET' or 'POST'.")
-        print("response", response)
+        # print("response", response)
         return response  # Assuming response is text, change if needed
     except requests.exceptions.RequestException as e:
         print(f"Error making {method.upper()} request: {e}")

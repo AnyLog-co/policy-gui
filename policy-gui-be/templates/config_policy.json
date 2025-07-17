@@ -1,0 +1,26 @@
+{
+  "name": "Config Policy",
+  "policy_file": "config_policy",
+  "policy_type": "config",
+  "fields": [
+    {
+      "name": "name",
+      "type": "text",
+      "label": "Name Field",
+      "description": "name field"
+    },
+    {
+      "name": "port",
+      "type": "text",
+      "label": "Port Field",
+      "description": "port field"
+    },
+    {
+      "name": "script",
+      "type": "array",
+      "label": "Script Field",
+      "description": "Startup script lines",
+      "required": false
+    }
+  ]
+}

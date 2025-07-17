@@ -49,6 +49,7 @@ class GenericPolicy(BasePolicy):
             "float": float,
             "boolean": bool,
             "select": str,  # still a string but constrained by options (optional to enforce)
+            "object": Dict[str, Any],
             "array": List[str],  # NEW
         }
         return mapping.get(template_type, str)
