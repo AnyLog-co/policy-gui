@@ -12,6 +12,13 @@
       "required": true
     },
     {
+      "name": "description",
+      "type": "text",
+      "label": "Permission Description",
+      "description": "A description of what this permission allows",
+      "required": false
+    },
+    {
       "name": "enable",
       "type": "array",
       "label": "Allowed Commands",
@@ -20,7 +27,7 @@
     },
     {
       "name": "databases",
-      "type": "array",
+      "type": "table",
       "label": "Allowed Databases",
       "description": "List of databases this permission can access",
       "required": true
@@ -40,14 +47,14 @@
               "name": "name",
               "type": "boolean",
               "label": "Name Field",
-              "default": true,
+              "default": false,
               "description": "Can access/modify name field"
             },
             {
               "name": "port",
               "type": "boolean",
               "label": "Port Field",
-              "default": true,
+              "default": false,
               "description": "Can access/modify port field"
             },
             {
@@ -61,7 +68,7 @@
               "name": "database",
               "type": "boolean",
               "label": "Database Field",
-              "default": true,
+              "default": false,
               "description": "Can access/modify database field"
             }
           ]
@@ -75,7 +82,7 @@
               "name": "tag",
               "type": "boolean",
               "label": "Tag Field",
-              "default": true,
+              "default": false,
               "description": "Can access/modify tag field"
             },
             {
@@ -89,7 +96,7 @@
               "name": "user mode",
               "type": "boolean",
               "label": "User Mode Field",
-              "default": true,
+              "default": false,
               "description": "Can access/modify user mode field"
             }
           ]
@@ -103,28 +110,28 @@
               "name": "owner",
               "type": "boolean",
               "label": "Owner Field",
-              "default": true,
+              "default": false,
               "description": "Can access/modify owner field"
             },
             {
               "name": "company",
               "type": "boolean",
               "label": "Company Field",
-              "default": true,
+              "default": false,
               "description": "Can access/modify company field"
             },
             {
               "name": "type",
               "type": "boolean",
               "label": "Type Field",
-              "default": true,
+              "default": false,
               "description": "Can access/modify type field"
             },
             {
               "name": "expiration",
               "type": "boolean",
               "label": "Expiration Field",
-              "default": true,
+              "default": false,
               "description": "Can access/modify expiration field"
             }
           ]
@@ -138,21 +145,21 @@
               "name": "type",
               "type": "boolean",
               "label": "Type Field",
-              "default": true,
+              "default": false,
               "description": "Can access/modify type field"
             },
             {
               "name": "role",
               "type": "boolean",
               "label": "Role Field",
-              "default": true,
+              "default": false,
               "description": "Can access/modify role field"
             },
             {
               "name": "name",
               "type": "boolean",
               "label": "Name Field",
-              "default": true,
+              "default": false,
               "description": "Can access/modify name field"
             }
           ]

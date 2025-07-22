@@ -51,6 +51,9 @@ class GenericPolicy(BasePolicy):
             "select": str,  # still a string but constrained by options (optional to enforce)
             "object": Dict[str, Any],
             "array": List[str],  # NEW
+            "permission": List[Any],  # NEW
+            "security_group": List[Any],
+            "table": List[Any]
         }
         return mapping.get(template_type, str)
 
@@ -126,7 +129,11 @@ class GenericPolicy(BasePolicy):
             else:
                 # Normal field
                 if name in result:
-                    final_result[name] = "" if result[name] is None else result[name]
+                    value = result[name]
+                    if isinstance(value, str):
+                        final_result[name] = f'"{value}"'
+                    else: 
+                        final_result[name] = "" if result[name] is None else result[name]
 
 
         return {self.policy_type: final_result}

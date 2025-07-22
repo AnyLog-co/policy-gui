@@ -12,7 +12,7 @@
     },
     {
       "name": "permissions",
-      "type": "array",
+      "type": "permission",
       "label": "Associated Permissions",
       "description": "List of permission names associated with this role",
       "required": true

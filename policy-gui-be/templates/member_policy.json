@@ -2,7 +2,7 @@
   "name": "Member Policy",
   "policy_file": "member_policy",
   "policy_type": "member",
-  "post_process": "apply_signature",  
+  "post_process": "add_new_member",  
   "fields": [
     {
       "name": "type",
@@ -14,7 +14,7 @@
     },
     {
       "name": "security_group",
-      "type": "text",
+      "type": "security_group",
       "label": "Security Group",
       "description": "Type the role for permissions",
       "required": true

@@ -1,4 +1,5 @@
 import requests
+import json
 import parsers
 import anylog_api.anylog_connector as anylog_connector
 from typing import Dict, Any
@@ -13,7 +14,37 @@ def get_node_options(node: str):
     ]
     return node_names
 
+def get_table_options(node: str):
+    response = make_request(node, "GET", "blockchain get table")
+    table_names = []
+    for obj in response:
+        group = obj.get('table')
+        if group and 'name' in group:
+            table_names.append(group['name'])
+    result = list(set(table_names))
+    return result
 
+def get_security_groups(node: str):
+    response = make_request(node, "GET", "blockchain get security_group")
+    security_groups = []
+    for obj in response:
+        group = obj.get('security_group')
+        if group and 'group_name' in group:
+            security_groups.append(group['group_name'])
+    security_groups = list(set(security_groups))
+    return security_groups
+
+def get_permissions(node: str):
+    response = make_request(node, "GET", "blockchain get permissions")
+
+    # print("GETTING Permissions Response:", response)
+    permissions = []
+    for obj in response:
+        permission = obj.get('permissions')
+        if permission and 'name' in permission:
+            permissions.append(permission['name'])
+    permissions = list(set(permissions))
+    return permissions
 
 
 
@@ -71,9 +102,13 @@ def make_policy(conn:str, policy: Dict):
     print(f"Policy Response: {policy_response}")
 
 
-    #Post-process the policy if needed
+    # Post-process the policy if needed
     if post_process_key:
-        run_post_process(post_process_key, policy, conn)
+        try:
+            run_post_process(post_process_key, policy, conn)
+        except Exception as e:
+            raise RuntimeError(f"Post-processing failed: {e}")
+
 
     # Get the master node IP/Port (POST)
     master_node_command = 'mnode = blockchain get master bring.ip_port'
@@ -106,6 +141,7 @@ def run_post_process(key: str, policy, conn: str):
 
     handlers = {
         "apply_signature": post_apply_signature,
+        "add_new_member": post_add_new_member,
         # Add more here
     }
 
@@ -114,6 +150,40 @@ def run_post_process(key: str, policy, conn: str):
         handler(policy, conn)
     else:
         print(f"[Post-Processing] No handler found for: {key}")
+
+def post_add_new_member(policy, conn):
+    command = "get !new_policy"
+    policy_response = make_request(conn, "GET", command)
+    print("NEW MEMBER Response: ", policy_response)
+
+    name = policy_response.get('member', {}).get('name')
+
+
+    command = f'blockchain get member where name = {name}'
+    check = make_request(conn, "GET", command)
+    print(check)
+    if isinstance(check, list) and len(check) > 0:
+        raise Exception(f"Member with name '{name}' already exists: {check}")
+    
+
+    command = f"id create keys where password = 123 and keys_file = {name}"
+    resp = make_request(conn, "POST", command)
+    print("ID CREATE KEYS: ", resp)
+
+    command = f'new_member_key = get private key where keys_file = {name}'
+    resp = make_request(conn, "POST", command)
+    command = "get !new_member_key"
+    privkey_resp = make_request(conn, "GET", command)
+    print("PRIVKEY Response: ", privkey_resp)
+
+    command = "new_policy = id sign !new_policy where key = !new_member_key and password = 123"
+    sign_response = make_request(conn, "POST", command)
+
+    print("SIGN RESPONSE: ", sign_response)
+
+    
+
+
 
 
 def post_apply_signature(policy, conn):
