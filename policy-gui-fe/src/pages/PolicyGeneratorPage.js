@@ -3,7 +3,7 @@ import NodeInput from '../components/NodeInput';
 import PolicySelector from '../components/PolicySelector';
 import DynamicPolicyForm from '../components/DynamicPolicyForm';
 import SSLConfig from '../components/SSLConfig';
-import { getPolicyTemplate, submitPolicy, fetchPermissions, fetchUserPermissions } from '../services/api';
+import { getPolicyTemplate, submitPolicy, fetchUserPermissions } from '../services/api';
 import '../styles/PolicyGeneratorPage.css'; // Adjust the path as necessary
 
 // Main page for generating and submitting policies
@@ -29,6 +29,12 @@ function PolicyGeneratorPage({ authenticatedNode, memberPolicy, onNodeChange }) 
   const [isChangingNode, setIsChangingNode] = useState(false);
   // State for user permissions
   const [userPermissions, setUserPermissions] = useState(null);
+  // State for preview visibility
+  const [showPreview, setShowPreview] = useState(true);
+  // State for loading during submission
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  // State to trigger refresh of dynamic data
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Update node when authenticatedNode changes (e.g., after login or node switch)
   useEffect(() => {
@@ -40,14 +46,14 @@ function PolicyGeneratorPage({ authenticatedNode, memberPolicy, onNodeChange }) 
   // Fetch permissions from the backend whenever the node changes
   useEffect(() => {
     if (!node) return;
-    console.log("Fetching permissions for:", authenticatedNode);
-    console.log("memberPolicy:", memberPolicy);
-    fetchPermissions(node)
-      .then(perms => setPermissions(perms))
-      .catch(err => {
-        console.error('failed to load permissions', err);
-        setPermissions(null);
-      });
+    // console.log("Fetching permissions for:", authenticatedNode);
+    // console.log("memberPolicy:", memberPolicy);
+    // fetchAvailablePermissions(node)
+    //   .then(perms => setPermissions(perms))
+    //   .catch(err => {
+    //     console.error('failed to load permissions', err);
+    //     setPermissions(null);
+    //   });
 
     fetchUserPermissions(node, memberPolicy[0].member.public_key)
       .then(result => {
@@ -86,17 +92,31 @@ function PolicyGeneratorPage({ authenticatedNode, memberPolicy, onNodeChange }) 
       alert(`Please fill out all required fields: ${missingFields.map(f => f.name).join(", ")}`);
       return;
     }
-    // Submit the policy to the backend
-    console.log('Submitting policy to backend:', formData);
-    const result = await submitPolicy(node, policyType, formData);
-    console.log('Submit result:', result);
 
-    if (result.success) {
-      // Show the last policy in the response (if multiple)
-      setResponse({ status: 'success', policy: result.data[result.data.length - 1] });
-      // setResponse(result);
-    } else {
-      setResponse({ status: 'error', message: result.error });
+    // Set loading state and clear previous response
+    setIsSubmitting(true);
+    setResponse(null);
+
+    try {
+      // Submit the policy to the backend
+      console.log('Submitting policy to backend:', formData);
+      const result = await submitPolicy(node, policyType, formData);
+      console.log('Submit result:', result);
+
+      if (result.success) {
+        // Show the last policy in the response (if multiple)
+        setResponse({ status: 'success', policy: result.data[result.data.length - 1] });
+        // Trigger refresh of dynamic data (permissions, etc.)
+        setRefreshTrigger(prev => prev + 1);
+        // setResponse(result);
+      } else {
+        setResponse({ status: 'error', message: result.error });
+      }
+    } catch (error) {
+      console.error('Error submitting policy:', error);
+      setResponse({ status: 'error', message: 'An unexpected error occurred while submitting the policy.' });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -235,6 +255,29 @@ function PolicyGeneratorPage({ authenticatedNode, memberPolicy, onNodeChange }) 
         <PolicySelector value={policyType} onChange={setPolicyType} allowedPolicyTypes={userPermissions.allowed_policy_types} />
       )}
 
+      {/* Preview toggle and refresh buttons */}
+      {userPermissions && formTemplate && (
+        <div className="form-controls">
+          <div className="preview-toggle">
+            <button 
+              onClick={() => setShowPreview(!showPreview)}
+              className="preview-toggle-button"
+            >
+              {showPreview ? 'Hide Preview' : 'Show Preview'}
+            </button>
+          </div>
+          {/* REFRESH BUTTON FOR DEBUGGING */}
+          {/* <div className="refresh-controls">
+            <button 
+              onClick={() => setRefreshTrigger(prev => prev + 1)}
+              className="refresh-button"
+              title="Refresh available options (permissions, nodes, etc.)"
+            >
+              🔄 Refresh Options
+            </button>
+          </div> */}
+        </div>
+      )}
 
       {/* Dynamic form for the selected policy template */}
       {userPermissions && (
@@ -244,17 +287,33 @@ function PolicyGeneratorPage({ authenticatedNode, memberPolicy, onNodeChange }) 
           node={node}
           onChange={setFormData}
           allowedPolicyFields={userPermissions.allowed_policy_fields}
+          showPreview={showPreview}
+          refreshTrigger={refreshTrigger}
         />
       )}
 
       {/* Submit button for the form */}
       {userPermissions && formTemplate && (
-        <button onClick={handleSubmit}>
-          Submit Policy
+        <button 
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+          className="submit-button"
+        >
+          {isSubmitting ? 'Submitting...' : 'Submit Policy'}
         </button>
       )}
 
 
+
+      {/* Loading overlay during submission */}
+      {isSubmitting && (
+        <div className="loading-overlay">
+          <div className="loading-content">
+            <div className="loading-spinner"></div>
+            <p>Submitting policy...</p>
+          </div>
+        </div>
+      )}
 
       {/* Show backend response after submission */}
       {response && (

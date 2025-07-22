@@ -110,6 +110,48 @@ export async function fetchTableOptions(nodeAddress) {
 }
 
 
+export async function fetchCustomTypes() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/custom-types`);
+    if (!response.ok) {
+      const error = await response.json();
+      return { error: error.detail || "Failed to fetch custom types" };
+    }
+    const data = await response.json();
+    return data.custom_types || [];
+  } catch (err) {
+    console.error("fetchCustomTypes error:", err);
+    return { error: "Could not connect to server" };
+  }
+}
+
+
+
+export async function fetchTypeOptions(nodeAddress, type) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/type-options`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        node: nodeAddress,
+        type: type
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      return { error: error.detail || "Failed to fetch type options" };
+    }
+
+    const data = await response.json();
+    return data.options || [];
+  } catch (err) {
+    console.error("fetchTypeOptions error:", err);
+    return { error: "Could not connect to server" };
+  }
+}
+
+
 export async function pingBackend() {
   try {
     const response = await fetch(`${API_BASE_URL}/ping`);
@@ -121,10 +163,21 @@ export async function pingBackend() {
   }
 }
 
-export async function fetchPermissions(nodeAddress) {
-  const res = await fetch(`${API_BASE_URL}/permissions/${nodeAddress}`);
-  // console.log("Permissions response:", res);
-  return res.ok ? await res.json() : { roles: [], allowed_policy_types: [] };
+export async function fetchAvailablePermissions(nodeAddress) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/permissions/${nodeAddress}`);
+    console.log("res:", res)
+    if (!res.ok) return [];
+    const data = await res.json();
+    // If backend returns a flat array, just return it
+    if (Array.isArray(data)) return data;
+    // If backend returns an object, try to extract permissions array
+    if (data && Array.isArray(data.permissions)) return data.permissions;
+    return [];
+  } catch (err) {
+    console.error("fetchAvailablePermissions error:", err);
+    return [];
+  }
 }
 
 export async function fetchUserPermissions(node, pubkey) {

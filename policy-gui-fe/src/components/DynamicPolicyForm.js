@@ -1,27 +1,92 @@
 import React, { useState, useEffect } from 'react';
-import { fetchNodeOptions, fetchTableOptions } from '../services/api';
+import { fetchAvailablePermissions, fetchCustomTypes, fetchTypeOptions } from '../services/api';
+import PermissionsTable from './PermissionsTable';
+import FieldPermissionsTable from './FieldPermissionsTable';
+import SecurityGroupsTable from './SecurityGroupsTable';
+import TableTable from './TableTable';
 import '../styles/DynamicPolicyForm.css';
 
 // DynamicPolicyForm renders a form based on a policy template definition
-function DynamicPolicyForm({ template, formData, onChange, node, allowedPolicyFields }) {
+function DynamicPolicyForm({ template, formData, onChange, node, allowedPolicyFields, showPreview = false, refreshTrigger = 0 }) {
   // State for dynamic options (e.g., node or table options fetched from backend)
+  const [dynamicTypes, setDynamicTypes] = useState([])
   const [dynamicOptions, setDynamicOptions] = useState({});
   const [allowedFields, setAllowedFields] = useState([]);
+  const [availablePermissions, setAvailablePermissions] = useState([]);
 
+  // Function to generate the policy JSON based on form data and template
+  const generatePolicyPreview = () => {
+    if (!template || !formData) return null;
+
+    const result = {};
+
+    // Process each field
+    for (const field of template.fields) {
+      const name = field.name;
+      const value = formData[name];
+
+      // Skip generated fields
+      if (field.type === 'generated') continue;
+
+      // If field has modifiers
+      if (field.modifiers) {
+        const val = value;
+        const val_str = typeof val === 'boolean' ? val.toString().toLowerCase() : String(val);
+        
+        const modifier = field.modifiers[val_str];
+        if (modifier) {
+          Object.assign(result, modifier);
+        }
+      } else {
+        // Normal field - only include if it has a value
+        if (value !== undefined && value !== null && value !== '') {
+          result[name] = value;
+        }
+      }
+    }
+
+    return { [template.policy_type]: result };
+  };
 
   useEffect(() => {
-    console.log("DynamicPolicyForm template:", template);
-    console.log("Allowed Policy Fields", allowedPolicyFields)
+    // console.log("DynamicPolicyForm template:", template);
+    // console.log("Allowed Policy Fields", allowedPolicyFields)
 
-    if (template && template.policy_type && allowedPolicyFields) {
-      // Initialize allowed fields from the template
+    if (template && template.policy_type) {
+      // Initialize allowed fields from the template if allowedPolicyFields is provided
+      if (allowedPolicyFields) {
       const type = template.policy_type
-      console.log("DynamicPolicyForm type:", type);
+      // console.log("DynamicPolicyForm type:", type);
 
       const allowed = Object.keys(allowedPolicyFields[type] || {});
 
       // const fields = template.fields.map(f => f.name);
       setAllowedFields(allowed);
+      } else {
+        // If no allowedPolicyFields, allow all fields
+        setAllowedFields([]);
+      }
+
+      // Initialize field_permissions with default values if it exists
+      const fieldPermissionsField = template.fields.find(f => f.name === 'field_permissions');
+      console.log("Found field_permissions field:", fieldPermissionsField);
+      console.log("Current formData.field_permissions:", formData.field_permissions);
+      
+      if (fieldPermissionsField && !formData.field_permissions) {
+        const defaultFieldPermissions = {};
+        
+        fieldPermissionsField.fields.forEach(policyTypeField => {
+          const policyType = policyTypeField.name;
+          defaultFieldPermissions[policyType] = {};
+          
+          policyTypeField.fields.forEach(fieldDef => {
+            defaultFieldPermissions[policyType][fieldDef.name] = fieldDef.default !== undefined ? fieldDef.default : true;
+          });
+        });
+        
+        console.log("Setting default field_permissions:", defaultFieldPermissions);
+        onChange({ ...formData, field_permissions: defaultFieldPermissions });
+      }
 
       // // If allowedPolicyFields is provided, filter the template fields
       // if (allowedPolicyFields) {
@@ -37,21 +102,53 @@ function DynamicPolicyForm({ template, formData, onChange, node, allowedPolicyFi
     async function fetchOptions() {
       if (!template || !node) return;
 
+      // Fetch dynamic types from backend
+      const customTypesResult = await fetchCustomTypes();
+
+      // console.log(customTypesResult);
+
+      const tempDynamicTypes = customTypesResult;
+      // if (Array.isArray(customTypesResult)) {
+      //   tempDynamicTypes = customTypesResult;
+      // } else if (customTypesResult && Array.isArray(customTypesResult.data)) {
+      //   tempDynamicTypes = customTypesResult.data;
+      // } else if (customTypesResult && Array.isArray(customTypesResult.custom_types)) {
+      //   tempDynamicTypes = customTypesResult.custom_types;
+      // }
+
+      setDynamicTypes(tempDynamicTypes);
+
       const updated = { ...dynamicOptions };
 
       for (const field of template.fields) {
-        if (field.type === 'node' && !updated[field.name]) {
-          updated[field.name] = await fetchNodeOptions(node);
-        } else if (field.type === 'table' && !updated[field.name]) {
-          updated[field.name] = await fetchTableOptions(node);
+        // Backward compatibility for node/table
+
+        if (tempDynamicTypes.includes(field.type) && !updated[field.name]) {
+          // For any dynamic type, fetch its options
+          updated[field.name] = await fetchTypeOptions(node, field.type);
         }
       }
 
       setDynamicOptions(updated);
+
+      console.log("RERANNNNNNN THAT BITTKHDJHSVBSFKJH")
+      console.log(updated)
+
     }
 
     fetchOptions();
-  }, [template, node]);
+  }, [template, node, refreshTrigger]);
+
+  useEffect(() => {
+    async function getPermissions() {
+      if (!node) return;
+      const perms = await fetchAvailablePermissions(node);
+      setAvailablePermissions(perms);
+
+      console.log("perms", perms)
+    }
+    getPermissions();
+  }, [node, refreshTrigger]);
 
   // Renders the appropriate input for a given field definition
   function renderFieldInput(field, value, onChange) {
@@ -77,10 +174,35 @@ function DynamicPolicyForm({ template, formData, onChange, node, allowedPolicyFi
     };
 
     // Use dynamic options if available (for node/table fields)
-    const dynamic = dynamicOptions[field.name];
+    let dynamic = dynamicOptions[field.name];
+
+    // Render SecurityGroupsTable for security_group array fields
+    if (field.type === 'security_group') {
+      const groups = dynamic || [];
+      console.log("Security Groups Options:", groups); // Added logging
+      return (
+        <SecurityGroupsTable
+          groups={groups}
+          selectedGroups={value || []}
+          onChange={(updated) => onChange(field.name, updated)}
+        />
+      );
+    }
+
+    if (field.type === 'table') {
+      const tablegroups = dynamic || [];
+      console.log("Table Options:", tablegroups); // Added logging
+      return (
+        <TableTable
+          groups={tablegroups}
+          selectedGroups={value || []}
+          onChange={(updated) => onChange(field.name, updated)}
+        />
+      );
+    }
 
     // Render select dropdown for select, node, or table fields
-    if (field.type === 'select' || field.type === 'node' || field.type === 'table') {
+    if (field.type === 'select' || dynamicTypes.includes(field.type)) {
       const options = field.options || dynamic || [];
       return (
         <select value={value || ''} onChange={handleChange}>
@@ -89,6 +211,28 @@ function DynamicPolicyForm({ template, formData, onChange, node, allowedPolicyFi
             <option key={opt} value={opt}>{opt}</option>
           ))}
         </select>
+      );
+    }
+
+    if (field.type === 'permission') {
+      return (
+        <PermissionsTable
+          permissions={availablePermissions}
+          selectedPermissions={value || []}
+          onChange={(updated) => onChange(field.name, updated)}
+        />
+      );
+    }
+
+
+    // Special handling for field_permissions to use table format
+    if (field.name === 'field_permissions' && field.type === 'object') {
+      console.log("Rendering field_permissions with value:", value);
+      return (
+        <FieldPermissionsTable
+          fieldPermissions={value || {}}
+          onChange={(updated) => onChange(field.name, updated)}
+        />
       );
     }
 
@@ -179,9 +323,12 @@ function DynamicPolicyForm({ template, formData, onChange, node, allowedPolicyFi
   // If no template or fields, render nothing
   if (!template || !template.fields) return null;
 
-  // Main render: map over fields and render each input
+  const policyPreview = generatePolicyPreview();
+
+  // Main render: two-column layout with form and preview
   return (
-    <div className="dynamic-policy-form">
+    <div className={`dynamic-policy-form ${showPreview ? 'two-column-layout' : ''}`}>
+      <div className="form-column">
       <h4>{capitalizeFirstLetter(template.name)} Policy Form</h4>
       {template.fields.map((field) => {
         if (field.type === 'generated') return null; // Skip generated fields
@@ -206,6 +353,16 @@ function DynamicPolicyForm({ template, formData, onChange, node, allowedPolicyFi
           </div>
         );
       })}
+      </div>
+      
+      {showPreview && (
+        <div className="preview-column">
+          <h4>Policy Preview</h4>
+          <div className="policy-preview">
+            <pre>{JSON.stringify(policyPreview, null, 2)}</pre>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -63,6 +63,141 @@
   border: 1px solid #e2e8f0;
 }
 
+/* Two-column layout styles */
+.dynamic-policy-form.two-column-layout {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+}
+
+.form-column {
+  flex: 1;
+  min-width: 0; /* Prevents flex item from overflowing */
+}
+
+.preview-column {
+  flex: 1;
+  min-width: 0; /* Prevents flex item from overflowing */
+  position: sticky;
+  top: 24px;
+}
+
+.policy-preview {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.policy-preview pre {
+  margin: 0;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #1e293b;
+  white-space: pre;
+  text-align: left;
+  overflow-x: auto;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 12px;
+}
+
+/* Form controls styles */
+.form-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin: 16px 0;
+  flex-wrap: wrap;
+}
+
+.preview-toggle {
+  margin: 0;
+}
+
+.refresh-controls {
+  margin: 0;
+}
+
+.refresh-button {
+  background-color: #10b981;
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.refresh-button:hover {
+  background-color: #059669;
+  transform: translateY(-1px);
+}
+
+.refresh-button:active {
+  transform: translateY(0);
+}
+
+.preview-toggle-button {
+  background-color: #64748b;
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preview-toggle-button:hover {
+  background-color: #475569;
+  transform: translateY(-1px);
+}
+
+.preview-toggle-button:active {
+  transform: translateY(0);
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 1024px) {
+  .dynamic-policy-form.two-column-layout {
+    flex-direction: column;
+    gap: 24px;
+  }
+  
+  .preview-column {
+    position: static;
+  }
+  
+  .policy-preview {
+    max-height: 400px;
+  }
+}
+
+@media (max-width: 768px) {
+  .dynamic-policy-form {
+    padding: 16px;
+  }
+  
+  .policy-preview {
+    max-height: 300px;
+  }
+  
+  .policy-preview pre {
+    font-size: 11px;
+  }
+}
+
 .dynamic-policy-form-field {
   margin-bottom: 20px;
 }
