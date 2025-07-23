@@ -4,6 +4,7 @@ import PermissionsTable from './PermissionsTable';
 import FieldPermissionsTable from './FieldPermissionsTable';
 import SecurityGroupsTable from './SecurityGroupsTable';
 import TableTable from './TableTable';
+import DefaultSelector from './DefaultSelector';
 import '../styles/DynamicPolicyForm.css';
 
 // DynamicPolicyForm renders a form based on a policy template definition
@@ -329,7 +330,17 @@ function DynamicPolicyForm({ template, formData, onChange, node, allowedPolicyFi
   return (
     <div className={`dynamic-policy-form ${showPreview ? 'two-column-layout' : ''}`}>
       <div className="form-column">
-      <h4>{capitalizeFirstLetter(template.name)} Policy Form</h4>
+      <h4>{capitalizeFirstLetter(template.name)} Form</h4>
+      
+      {/* Default Selector */}
+      {template.defaults && (
+        <DefaultSelector
+          defaults={template.defaults}
+          onSelectDefault={(defaultData) => onChange(defaultData)}
+          currentFormData={formData}
+        />
+      )}
+      
       {template.fields.map((field) => {
         if (field.type === 'generated') return null; // Skip generated fields
 
@@ -341,7 +352,7 @@ function DynamicPolicyForm({ template, formData, onChange, node, allowedPolicyFi
         return (
           <div key={field.name} className="dynamic-policy-form-field">
             <label className="dynamic-policy-form-label">
-              {field.name}
+              {field.label}
               {field.required && <span className="required-asterisk"> *</span>}
               <span className="tooltip-icon">ⓘ
                 <span className="tooltip-text">

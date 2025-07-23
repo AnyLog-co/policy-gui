@@ -1,20 +1,29 @@
+
 import React from 'react';
 import '../styles/FieldPermissionsTable.css';
 
 function FieldPermissionsTable({ fieldPermissions, onChange }) {
-  console.log("FieldPermissionsTable received:", fieldPermissions);
-  
-  // Extract all policy types and their fields
   const policyTypes = Object.keys(fieldPermissions || {});
-  
-  console.log("Policy types found:", policyTypes);
 
   const handleFieldChange = (policyType, fieldName, value) => {
     const updated = { ...fieldPermissions };
-    if (!updated[policyType]) {
-      updated[policyType] = {};
-    }
+    if (!updated[policyType]) updated[policyType] = {};
     updated[policyType][fieldName] = value;
+    onChange(updated);
+  };
+
+  // Toggle all for one policyType
+  const handleSelectAll = (policyType) => {
+    const fields = fieldPermissions[policyType] || {};
+    const fieldNames = Object.keys(fields);
+    const allSelected = fieldNames.every(name => fields[name]);
+    const updated = {
+      ...fieldPermissions,
+      [policyType]: fieldNames.reduce((acc, name) => {
+        acc[name] = !allSelected;
+        return acc;
+      }, {})
+    };
     onChange(updated);
   };
 
@@ -23,8 +32,10 @@ function FieldPermissionsTable({ fieldPermissions, onChange }) {
       {policyTypes.map(policyType => {
         const fields = fieldPermissions[policyType] || {};
         const fieldNames = Object.keys(fields);
-        
         if (fieldNames.length === 0) return null;
+
+        // check if every field is checked
+        const allSelected = fieldNames.length > 0 && fieldNames.every(name => fields[name]);
 
         return (
           <div key={policyType} className="policy-type-table-container">
@@ -36,7 +47,17 @@ function FieldPermissionsTable({ fieldPermissions, onChange }) {
                 <thead>
                   <tr>
                     <th>Field</th>
-                    <th>Allowed</th>
+                    <th>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        Allowed
+                        <input
+                          type="checkbox"
+                          checked={allSelected}
+                          onChange={() => handleSelectAll(policyType)}
+                          className="field-permission-checkbox"
+                        />
+                      </label>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -51,7 +72,7 @@ function FieldPermissionsTable({ fieldPermissions, onChange }) {
                           <input
                             type="checkbox"
                             checked={isAllowed}
-                            onChange={(e) => handleFieldChange(policyType, fieldName, e.target.checked)}
+                            onChange={e => handleFieldChange(policyType, fieldName, e.target.checked)}
                             className="field-permission-checkbox"
                           />
                         </td>
@@ -68,4 +89,4 @@ function FieldPermissionsTable({ fieldPermissions, onChange }) {
   );
 }
 
-export default FieldPermissionsTable; 
+export default FieldPermissionsTable;

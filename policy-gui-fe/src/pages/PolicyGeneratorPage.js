@@ -98,19 +98,19 @@ function PolicyGeneratorPage({ authenticatedNode, memberPolicy, onNodeChange }) 
     setResponse(null);
 
     try {
-      // Submit the policy to the backend
-      console.log('Submitting policy to backend:', formData);
-      const result = await submitPolicy(node, policyType, formData);
-      console.log('Submit result:', result);
+    // Submit the policy to the backend
+    console.log('Submitting policy to backend:', formData);
+    const result = await submitPolicy(node, policyType, formData);
+    console.log('Submit result:', result);
 
-      if (result.success) {
-        // Show the last policy in the response (if multiple)
-        setResponse({ status: 'success', policy: result.data[result.data.length - 1] });
+    if (result.success) {
+      // Show the last policy in the response (if multiple)
+      setResponse({ status: 'success', policy: result.data[result.data.length - 1] });
         // Trigger refresh of dynamic data (permissions, etc.)
         setRefreshTrigger(prev => prev + 1);
-        // setResponse(result);
-      } else {
-        setResponse({ status: 'error', message: result.error });
+      // setResponse(result);
+    } else {
+      setResponse({ status: 'error', message: result.error });
       }
     } catch (error) {
       console.error('Error submitting policy:', error);
