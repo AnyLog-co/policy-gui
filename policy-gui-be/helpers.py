@@ -32,7 +32,7 @@ def get_security_groups(node: str):
         if group and 'group_name' in group:
             security_groups.append(group['group_name'])
     security_groups = list(set(security_groups))
-    return security_groups
+    return response
 
 def get_permissions(node: str):
     response = make_request(node, "GET", "blockchain get permissions")
@@ -44,7 +44,7 @@ def get_permissions(node: str):
         if permission and 'name' in permission:
             permissions.append(permission['name'])
     permissions = list(set(permissions))
-    return permissions
+    return response
 
 
 

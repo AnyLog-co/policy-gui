@@ -2,7 +2,18 @@
   "name": "Member Policy",
   "policy_file": "member_policy",
   "policy_type": "member",
-  "post_process": "add_new_member",  
+  "post_process": "add_new_member",
+  "defaults": {
+    "simple_user": {
+      "name": "Simple User",
+      "description": "Simple user with basic permissions",
+      "values": {
+        "type": "user",
+        "security_group": "operator",
+        "name": "John Doe"
+      }
+    }
+  },
   "fields": [
     {
       "name": "type",

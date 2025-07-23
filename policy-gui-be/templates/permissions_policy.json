@@ -3,6 +3,110 @@
   "policy_file": "permissions_policy",
   "policy_type": "permissions",
   "post_process": "apply_signature",
+  "defaults": {
+    "admin_permissions": {
+      "name": "Admin Permissions",
+      "description": "Full administrative access with all permissions enabled",
+      "values": {
+        "name": "admin_permissions",
+        "description": "Full administrative access to all system resources",
+        "enable": ["*"],
+        "databases": ["*"],
+        "field_permissions": {
+          "config": {
+            "name": true,
+            "port": true,
+            "script": true,
+            "database": true
+          },
+          "security": {
+            "tag": true,
+            "extra tag": true,
+            "user mode": true
+          },
+          "user": {
+            "owner": true,
+            "company": true,
+            "type": true,
+            "expiration": true
+          },
+          "member": {
+            "type": true,
+            "role": true,
+            "name": true
+          }
+        }
+      }
+    },
+    "read_only": {
+      "name": "Read-Only Access",
+      "description": "Limited access for viewing data only",
+      "values": {
+        "name": "read_only",
+        "description": "Read-only access to system resources",
+        "enable": ["get", "select", "read"],
+        "databases": [],
+        "field_permissions": {
+          "config": {
+            "name": true,
+            "port": false,
+            "script": false,
+            "database": false
+          },
+          "security": {
+            "tag": true,
+            "extra tag": false,
+            "user mode": false
+          },
+          "user": {
+            "owner": true,
+            "company": true,
+            "type": true,
+            "expiration": false
+          },
+          "member": {
+            "type": true,
+            "role": false,
+            "name": true
+          }
+        }
+      }
+    },
+    "developer": {
+      "name": "Developer Access",
+      "description": "Access for developers with limited administrative capabilities",
+      "values": {
+        "name": "developer",
+        "description": "Developer access with configuration and data management capabilities",
+        "enable": ["get", "select", "read", "write", "create", "update"],
+        "databases": ["dev_db", "test_db"],
+        "field_permissions": {
+          "config": {
+            "name": true,
+            "port": true,
+            "script": true,
+            "database": true
+          },
+          "security": {
+            "tag": true,
+            "extra tag": true,
+            "user mode": false
+          },
+          "user": {
+            "owner": true,
+            "company": true,
+            "type": true,
+            "expiration": false
+          },
+          "member": {
+            "type": true,
+            "role": false,
+            "name": true
+          }
+        }
+      }
+    }
+  },
   "fields": [
     {
       "name": "name",
