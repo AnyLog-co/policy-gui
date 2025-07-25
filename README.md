@@ -1,5 +1,9 @@
 # policy-gui
 
+## How to run
+
+1. `docker build -t policy-gui .`
+2. `docker run it --rm -p 8000:8000 -p 3001:3001 --env REACT_APP_API_URL=http://localhost:8000 policy-gui`
 
 
 ### Proposed Flow
