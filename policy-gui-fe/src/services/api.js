@@ -1,5 +1,10 @@
 // api.js
-const API_BASE_URL = "http://localhost:8000"; // Adjust if needed
+
+// const API_BASE_URL = process.env.NODE_ENV === 'production' 
+//   ? "/api"  // In production (Docker), use relative path for nginx proxy
+//   : "http://localhost:8000"; // In development, use direct backend URL
+
+const API_BASE_URL = window._env_?.REACT_APP_API_URL || "http://localhost:8000";
 
 export async function login(nodeAddress, pubkey) {
   if (!nodeAddress || !pubkey) {

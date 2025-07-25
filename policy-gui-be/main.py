@@ -19,7 +19,7 @@ app = FastAPI()
 # Allow CORS for React frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React dev server
+    allow_origins=["http://localhost:3000", "http://localhost:3001", "http://0.0.0.0:3001"],  # React dev server and production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -61,8 +61,45 @@ class GetAllowedFieldsRequest(BaseModel):
 
 @app.get("/")
 def root():
-    resp = helpers.make_request("45.33.110.211:32549", "GET", "get status")
-    return {"message": resp}
+    return {"message": "Policy GUI Backend is running", "status": "healthy"}
+
+@app.get("/health")
+def health():
+    try:
+        # Test external REST API connectivity
+        import requests
+        response = requests.get("https://httpbin.org/get", timeout=5)
+        
+        if response.status_code == 200:
+            return {
+                "status": "healthy", 
+                "message": "Backend is running",
+                "rest_api_test": {
+                    "external_api": "working",
+                    "status_code": response.status_code,
+                    "response_time": f"{response.elapsed.total_seconds():.3f}s"
+                }
+            }
+        else:
+            return {
+                "status": "unhealthy",
+                "message": "External API test failed",
+                "rest_api_test": {
+                    "external_api": "failed",
+                    "status_code": response.status_code
+                }
+            }
+    except Exception as e:
+        return {
+            "status": "unhealthy",
+            "message": f"Backend has issues: {str(e)}",
+            "rest_api_test": {
+                "external_api": "failed",
+                "error": str(e)
+            }
+        }
+
+
 
 
 @app.get("/policy-types")

@@ -192,3 +192,15 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+
+./ca-anylog-pubkey.crt
+./derived_pubkey.pem
+./freshly_encrypted.hex
+./pranavprivkey.pem
+./pranavpubkey.pem
+./royprivkey.pem
+./roypubkey.pem
+./server-acme.crt
+./serveracmeprivkey.key
+./tets.sh
