@@ -22,6 +22,7 @@ def get_table_options(node: str):
         if group and 'name' in group:
             table_names.append(group['name'])
     result = list(set(table_names))
+    result.insert(0, "*")
     return result
 
 def get_security_groups(node: str):

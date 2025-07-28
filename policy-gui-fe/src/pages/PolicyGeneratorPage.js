@@ -3,6 +3,7 @@ import NodeInput from '../components/NodeInput';
 import PolicySelector from '../components/PolicySelector';
 import DynamicPolicyForm from '../components/DynamicPolicyForm';
 import SSLConfig from '../components/SSLConfig';
+import AssignmentManager from '../components/AssignmentManager';
 import { getPolicyTemplate, submitPolicy, fetchUserPermissions } from '../services/api';
 import '../styles/PolicyGeneratorPage.css'; // Adjust the path as necessary
 
@@ -35,6 +36,8 @@ function PolicyGeneratorPage({ authenticatedNode, memberPolicy, onNodeChange }) 
   const [isSubmitting, setIsSubmitting] = useState(false);
   // State to trigger refresh of dynamic data
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  // State for assignment manager visibility
+  const [showAssignmentManager, setShowAssignmentManager] = useState(false);
 
   // Update node when authenticatedNode changes (e.g., after login or node switch)
   useEffect(() => {
@@ -320,6 +323,25 @@ function PolicyGeneratorPage({ authenticatedNode, memberPolicy, onNodeChange }) 
         <div className="response">
           <h4>Response:</h4>
           <pre>{JSON.stringify(response, null, 2)}</pre>
+        </div>
+      )}
+
+      {/* Assignment Manager Section */}
+      {userPermissions && (
+        <div className="assignment-manager-section">
+          <div className="section-header">
+            <h3>Assignment Policy Management</h3>
+            <button 
+              onClick={() => setShowAssignmentManager(!showAssignmentManager)}
+              className="toggle-button"
+            >
+              {showAssignmentManager ? 'Hide' : 'Show'} Assignment Manager
+            </button>
+          </div>
+          
+          {showAssignmentManager && (
+            <AssignmentManager node={node} />
+          )}
         </div>
       )}
     </div>

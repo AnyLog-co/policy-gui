@@ -10,6 +10,7 @@ import json
 import os
 import helpers
 import permissions
+import assignment_manager
 import secrets
 import textwrap
 
@@ -57,6 +58,15 @@ class GetAllowedFieldsRequest(BaseModel):
     node: str
     member_pubkey: str
     policy_type: str
+
+
+class RegenerateAssignmentsRequest(BaseModel):
+    node: str
+    security_group: str = None  # If None, regenerate all
+
+
+class AssignmentSummaryRequest(BaseModel):
+    node: str
 
 
 @app.get("/")
@@ -166,6 +176,45 @@ def submit_policy(request: SubmitPolicyRequest):
 
     resp = helpers.make_policy(request.node, final_json)
 
+    # Auto-regenerate assignments if this policy affects security groups or members
+    try:
+        if request.policy_file == "member_policy":
+            # Extract security groups from member policy
+            security_groups = request.policy.get("security_group", [])
+            if isinstance(security_groups, str):
+                security_groups = [security_groups]
+            
+            # Extract member pubkey if available
+            member_pubkey = request.policy.get("public_key")
+            if member_pubkey:
+                assignment_manager.handle_member_policy_change(
+                    request.node, member_pubkey, security_groups
+                )
+            else:
+                # If no pubkey, regenerate all assignments for affected security groups
+                for security_group in security_groups:
+                    assignment_manager.handle_security_group_change(request.node, security_group)
+        
+        elif request.policy_file == "securitygroup_policy":
+            # Extract security group name
+            security_group = request.policy.get("group_name")
+            if security_group:
+                assignment_manager.handle_security_group_change(request.node, security_group)
+        
+        elif request.policy_file == "permissions_policy":
+            # Permissions policy changes might affect multiple security groups
+            # Get all security groups and regenerate their assignments
+            security_groups_response = helpers.get_security_groups(request.node)
+            for group_data in security_groups_response:
+                if isinstance(group_data, dict) and 'security_group' in group_data:
+                    group = group_data['security_group']
+                    if 'group_name' in group:
+                        assignment_manager.handle_security_group_change(request.node, group['group_name'])
+    
+    except Exception as e:
+        print(f"Warning: Failed to auto-regenerate assignments: {e}")
+        # Don't fail the main request, just log the warning
+
     return resp
 
 challenge_store = {}
@@ -176,6 +225,11 @@ def authenticate_user(request: LoginRequest):
     Authenticate user using node and pubkey, returning member policy if found.
     """
     try:
+        # test see if node is running
+        resp = helpers.make_request(request.node, "GET", "get status")
+        print("Node Status:", resp)
+
+
         member_policy = permissions.get_member_policy(
             request.node, f'"{request.pubkey}"'
         )
@@ -492,4 +546,82 @@ def validate_policy_access(request: SubmitPolicyRequest):
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Policy validation failed: {str(e)}"
+        )
+
+
+# --- Assignment Policy Management Endpoints --- #
+
+@app.post("/regenerate-assignments")
+def regenerate_assignments(request: RegenerateAssignmentsRequest):
+    """
+    Regenerate assignment policies for a specific security group or all security groups.
+    """
+    try:
+        if request.security_group:
+            assignment_manager.regenerate_assignments_for_security_group(
+                request.node, request.security_group
+            )
+            return {
+                "success": True,
+                "message": f"Regenerated assignments for security group: {request.security_group}"
+            }
+        else:
+            assignment_manager.regenerate_all_assignments(request.node)
+            return {
+                "success": True,
+                "message": "Regenerated all assignment policies"
+            }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to regenerate assignments: {str(e)}"
+        )
+
+
+@app.post("/assignment-summary")
+def get_assignment_summary(request: AssignmentSummaryRequest):
+    """
+    Get a summary of all assignment policies for monitoring and debugging.
+    """
+    try:
+        summary = assignment_manager.get_assignment_summary(request.node)
+        return summary
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get assignment summary: {str(e)}"
+        )
+
+
+@app.post("/handle-member-change")
+def handle_member_policy_change_endpoint(node: str = Body(...), member_pubkey: str = Body(...), new_security_groups: List[str] = Body(...)):
+    """
+    Handle changes to member policies by updating relevant assignment policies.
+    """
+    try:
+        assignment_manager.handle_member_policy_change(
+            node, member_pubkey, new_security_groups
+        )
+        return {
+            "success": True,
+            "message": f"Handled member policy change for {member_pubkey}"
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to handle member policy change: {str(e)}"
+        )
+
+
+@app.post("/handle-security-group-change")
+def handle_security_group_change_endpoint(node: str = Body(...), security_group: str = Body(...)):
+    """
+    Handle changes to security group policies by updating relevant assignment policies.
+    """
+    try:
+        assignment_manager.handle_security_group_change(node, security_group)
+        return {
+            "success": True,
+            "message": f"Handled security group change for {security_group}"
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to handle security group change: {str(e)}"
         )

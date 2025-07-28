@@ -205,3 +205,56 @@ export async function fetchUserPermissions(node, pubkey) {
     return { error: "Could not connect to server" };
   }
 }
+
+// Assignment Management API functions
+export async function assignmentSummary(node) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/assignment-summary`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        node: node
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to fetch assignment summary");
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching assignment summary:", error);
+    throw error;
+  }
+}
+
+export async function regenerateAssignments(node, securityGroup = null) {
+  try {
+    const requestBody = {
+      node: node
+    };
+    
+    if (securityGroup) {
+      requestBody.security_group = securityGroup;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/regenerate-assignments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to regenerate assignments");
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error regenerating assignments:", error);
+    throw error;
+  }
+}
