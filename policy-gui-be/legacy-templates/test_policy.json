@@ -2,20 +2,49 @@
   "name": "Test Policy",
   "policy_file": "test_policy",
   "policy_type": "test",
+  "defaults": {
+    "production_node": {
+      "name": "Production Node Setup",
+      "description": "Standard configuration for production nodes with security enabled",
+      "values": {
+        "enable script": true,
+        "user mode": "admin"
+      }
+    },
+    "development_node": {
+      "name": "Development Node Setup", 
+      "description": "Configuration for development nodes with relaxed settings",
+      "values": {
+        "enable script": false,
+        "user mode": "user"
+      }
+    },
+    "testing_node": {
+      "name": "Testing Node Setup",
+      "description": "Configuration optimized for testing environments",
+      "values": {
+        "enable script": true,
+        "user mode": "admin"
+      }
+    }
+  },
   "fields": [
     {
       "name": "target node",
       "type": "node",
+      "label": "Target Node",
       "description": "Select a connected node to send the policy to."
     },
     {
       "name": "source table",
       "type": "table",
+      "label": "Source Table",
       "description": "Choose a table to operate on."
     },
     {
       "name": "script",
       "type": "array",
+      "label": "Startup Script",
       "description": "Startup script lines",
       "required": false
     },

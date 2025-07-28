@@ -69,6 +69,10 @@ class AssignmentSummaryRequest(BaseModel):
     node: str
 
 
+class CheckGuestRequest(BaseModel):
+    pubkey: str
+
+
 @app.get("/")
 def root():
     return {"message": "Policy GUI Backend is running", "status": "healthy"}
@@ -176,44 +180,44 @@ def submit_policy(request: SubmitPolicyRequest):
 
     resp = helpers.make_policy(request.node, final_json)
 
-    # Auto-regenerate assignments if this policy affects security groups or members
-    try:
-        if request.policy_file == "member_policy":
-            # Extract security groups from member policy
-            security_groups = request.policy.get("security_group", [])
-            if isinstance(security_groups, str):
-                security_groups = [security_groups]
+    # # Auto-regenerate assignments if this policy affects security groups or members
+    # try:
+    #     if request.policy_file == "member_policy":
+    #         # Extract security groups from member policy
+    #         security_groups = request.policy.get("security_group", [])
+    #         if isinstance(security_groups, str):
+    #             security_groups = [security_groups]
             
-            # Extract member pubkey if available
-            member_pubkey = request.policy.get("public_key")
-            if member_pubkey:
-                assignment_manager.handle_member_policy_change(
-                    request.node, member_pubkey, security_groups
-                )
-            else:
-                # If no pubkey, regenerate all assignments for affected security groups
-                for security_group in security_groups:
-                    assignment_manager.handle_security_group_change(request.node, security_group)
+    #         # Extract member pubkey if available
+    #         member_pubkey = request.policy.get("public_key")
+    #         if member_pubkey:
+    #             assignment_manager.handle_member_policy_change(
+    #                 request.node, member_pubkey, security_groups
+    #             )
+    #         else:
+    #             # If no pubkey, regenerate all assignments for affected security groups
+    #             for security_group in security_groups:
+    #                 assignment_manager.handle_security_group_change(request.node, security_group)
         
-        elif request.policy_file == "securitygroup_policy":
-            # Extract security group name
-            security_group = request.policy.get("group_name")
-            if security_group:
-                assignment_manager.handle_security_group_change(request.node, security_group)
+    #     elif request.policy_file == "securitygroup_policy":
+    #         # Extract security group name
+    #         security_group = request.policy.get("group_name")
+    #         if security_group:
+    #             assignment_manager.handle_security_group_change(request.node, security_group)
         
-        elif request.policy_file == "permissions_policy":
-            # Permissions policy changes might affect multiple security groups
-            # Get all security groups and regenerate their assignments
-            security_groups_response = helpers.get_security_groups(request.node)
-            for group_data in security_groups_response:
-                if isinstance(group_data, dict) and 'security_group' in group_data:
-                    group = group_data['security_group']
-                    if 'group_name' in group:
-                        assignment_manager.handle_security_group_change(request.node, group['group_name'])
+    #     elif request.policy_file == "permissions_policy":
+    #         # Permissions policy changes might affect multiple security groups
+    #         # Get all security groups and regenerate their assignments
+    #         security_groups_response = helpers.get_security_groups(request.node)
+    #         for group_data in security_groups_response:
+    #             if isinstance(group_data, dict) and 'security_group' in group_data:
+    #                 group = group_data['security_group']
+    #                 if 'group_name' in group:
+    #                     assignment_manager.handle_security_group_change(request.node, group['group_name'])
     
-    except Exception as e:
-        print(f"Warning: Failed to auto-regenerate assignments: {e}")
-        # Don't fail the main request, just log the warning
+    # except Exception as e:
+    #     print(f"Warning: Failed to auto-regenerate assignments: {e}")
+    #     # Don't fail the main request, just log the warning
 
     return resp
 
@@ -223,12 +227,34 @@ challenge_store = {}
 def authenticate_user(request: LoginRequest):
     """
     Authenticate user using node and pubkey, returning member policy if found.
+    Supports guest login for admin access.
     """
     try:
+        # Check for guest login
+        if request.pubkey.lower() in ["guest", "admin", "test"]:
+            # Create a guest member policy with admin privileges
+            guest_member_policy = [{
+                "member": {
+                    "public_key": "guest_admin_key",
+                    "name": "Guest Admin",
+                    "type": "user",
+                    "security_group": "admin"
+                }
+            }]
+            
+            print("Guest login detected - providing admin access")
+            
+            return {
+                "success": True,
+                "member_policy": guest_member_policy,
+                "message": "Guest admin login successful",
+                "is_guest": True
+            }
+        
+        # Regular authentication flow
         # test see if node is running
         resp = helpers.make_request(request.node, "GET", "get status")
         print("Node Status:", resp)
-
 
         member_policy = permissions.get_member_policy(
             request.node, f'"{request.pubkey}"'
@@ -240,8 +266,6 @@ def authenticate_user(request: LoginRequest):
             member_policy_name = member_policy[0].get("member", {}).get("name")
 
             challenge = secrets.token_urlsafe(32)
-
-
 
             helpers.make_request(request.node, "POST", f"message = {challenge}")
             resp = helpers.make_request(request.node, "GET", "get !message")
@@ -266,24 +290,15 @@ def authenticate_user(request: LoginRequest):
             resp = helpers.make_request(request.node, "GET", "get !login_privkey")
             print("Privkey logged:", resp)
 
-
             helpers.make_request(request.node, "POST", "message = id decrypt !message where key = !login_privkey and password = 123")
             decrypted = helpers.make_request(request.node, "GET", "get !message")
             print("Decrypted Secret logged:", decrypted)
-
-            # return {
-            #     "encrypted_challenge": encrypted,
-            #     "decrypt_command": f"echo '{encrypted}' | anylog id decrypt <your_private_key>"
-            # }
-
-
-
-            # helpers.make_request()
 
         return {
             "success": True,
             "member_policy": member_policy,
             "message": "Authentication successful",
+            "is_guest": False
         }
     except ValueError as e:
         raise HTTPException(status_code=401, detail=str(e))
@@ -360,11 +375,22 @@ def get_permissions(node: str):
 def get_user_permissions(node: str = Body(...), pubkey: str = Body(...)):
     """
     After login, aggregate all permissions for the user based on their role.
+    Supports guest users with admin privileges.
     """
 
     print("Aggregating permissions for user:", pubkey, "on node:", node)
 
     try:
+        # Check for guest users
+        if pubkey.lower() in ["guest", "admin", "test"] or pubkey == "guest_admin_key":
+            print("Guest user detected - providing admin permissions")
+            return {
+                "security_group": ["admin"],
+                "allowed_policy_types": ["*"],
+                "allowed_policy_fields": {},
+                "is_guest": True
+            }
+
         # 1. Get member policy
         member_policy = permissions.get_member_policy(node, f'"{pubkey}"')
         # if not isinstance(member_policy[0], dict):
@@ -389,6 +415,7 @@ def get_user_permissions(node: str = Body(...), pubkey: str = Body(...)):
                 "security_group": security_group_names,
                 "allowed_policy_types": ["*"],
                 "allowed_policy_fields": {},
+                "is_guest": False
             }
 
         all_security_group_policies = []
@@ -473,6 +500,7 @@ def get_user_permissions(node: str = Body(...), pubkey: str = Body(...)):
             "security_group": security_group_names, # str: name of the group
             "allowed_policy_types": allowed_policy_types, # list of allowed policy types
             "allowed_policy_fields": allowed_policy_fields, # dict of type: {field: t/f}
+            "is_guest": False
         }
     except Exception as e:
         raise HTTPException(
@@ -624,4 +652,21 @@ def handle_security_group_change_endpoint(node: str = Body(...), security_group:
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Failed to handle security group change: {str(e)}"
+        )
+
+
+@app.post("/check-guest")
+def check_guest_user(request: CheckGuestRequest):
+    """
+    Check if a user is a guest user.
+    """
+    try:
+        is_guest = request.pubkey.lower() in ["guest", "admin", "test"] or request.pubkey == "guest_admin_key"
+        return {
+            "is_guest": is_guest,
+            "pubkey": request.pubkey
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to check guest status: {str(e)}"
         )
